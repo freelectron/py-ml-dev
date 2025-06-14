@@ -165,9 +165,10 @@ def main() -> None:
     evaluate_model(xgb_search.best_estimator_, X_train_tfidf, y_train, "XGBoostSearch (train)")
 
     # Clean and vectorize test data
-    X_test_cleaned = clean_corpus(X_test)
+    X_test_cleaned = clean_corpus(X_test, use_ray=True)
     X_test_counts = vectorizer.transform([" ".join(tokens) for tokens in X_test_cleaned])
     X_test_tfidf = tfidf_transform(X_test_counts)
+    X_test_tfidf = pca_estimator.transform(X_test_tfidf.toarray())
 
     # Evaluate on test set
     evaluate_model(clf_logistic, X_test_tfidf, y_test, "LogisticRegressionCV (test)")
