@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "py-ml-dev"
+version = "0.1.0"
+description = "Templates for Python ML development"
+authors = ["Your Name <your.email@example.com>"]
+packages = [{ include = "py_ml_dev" }]
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.14"
+notebook = "^7.4.3"
+torch = "^2.7.1"
+pandas = "^2.3.0"
+scikit-learn = "^1.7.0"
+spacy = "^3.8.7"
+nltk = "^3.9.1"
+ray = "^2.47.0"
+black = "^25.1.0"
+xgboost = "^3.0.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
