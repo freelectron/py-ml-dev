@@ -16,6 +16,7 @@ nltk = "^3.9.1"
 ray = "^2.47.0"
 black = "^25.1.0"
 xgboost = "^3.0.2"
+matplotlib = "^3.10.3"
 
 [build-system]
 requires = ["poetry-core"]

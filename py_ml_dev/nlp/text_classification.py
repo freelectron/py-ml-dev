@@ -6,12 +6,15 @@ from typing import List, Any, Tuple, Dict
 import pandas as pd
 import spacy
 import ray
+from matplotlib.pyplot import title
 from sklearn.model_selection import train_test_split, RandomizedSearchCV
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
+from sklearn.decomposition import PCA
 from sklearn.datasets import fetch_20newsgroups
 from sklearn.linear_model import LogisticRegressionCV
 from xgboost import XGBClassifier
+import matplotlib.pyplot as plt
 
 nlp = spacy.load("en_core_web_sm")
 
@@ -32,7 +35,7 @@ def clean_text(text: str) -> List[str]:
 def clean_corpus(corpus: List[str], use_ray: bool = False) -> List[List[str]]:
     """
     Clean a list of text documents. Optionally parallelize with Ray.
-    """
+    # """
     if use_ray:
         ray.init(ignore_reinit_error=True, num_cpus=os.cpu_count() - 1)
         @ray.remote
@@ -102,6 +105,13 @@ def evaluate_model(
     preds = model.predict(X)
     acc = accuracy_score(y, preds)
     print(f"Accuracy for {label or model.__class__.__name__}: {acc:.4f}")
+    cm = confusion_matrix(y, preds)
+    displ = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=model.classes_)
+    fig, ax = plt.subplots(1,1, figsize=(12, 12))
+    ax.set_title(f"Accuracy for {label or model.__class__.__name__}: {acc:.4f}")
+    displ.plot(ax=ax)
+    plt.show()
+
     return acc
 
 
@@ -129,6 +139,13 @@ def main() -> None:
     vectorizer, X_train_counts = vectorize_corpus(X_train_cleaned, vocabulary)
     X_train_tfidf = tfidf_transform(X_train_counts)
 
+    # Dimensionality reduction with PCA
+    n_components = 1000
+    pca_estimator = PCA(n_components=n_components).fit(X_train_tfidf.toarray())
+    X_train_tfidf = pca_estimator.transform(X_train_tfidf.toarray())
+    print(f"Reduced training data to {n_components} dimensions using PCA. "
+          f"Explained variance ratio: {pca_estimator.explained_variance_ratio_.sum():.4f}")
+
     # Train Logistic Regression
     start_time = datetime.now()
     clf_logistic = train_logistic_regression(X_train_tfidf, y_train)
@@ -138,7 +155,7 @@ def main() -> None:
     # Train XGBoost with RandomizedSearchCV
     start_time = datetime.now()
     param_dist = {
-        "max_depth": [3],
+        "max_depth": [5],
         "min_child_weight": [2],
         "n_estimators": [50, 100],
     }
@@ -146,7 +163,6 @@ def main() -> None:
     print("Training XGBoost with RandomizedSearchCV took", (datetime.now() - start_time).seconds, "seconds")
     pd.DataFrame(xgb_search.cv_results_).to_csv("../../static/data/xgb_search_results.csv", index=False)
     evaluate_model(xgb_search.best_estimator_, X_train_tfidf, y_train, "XGBoostSearch (train)")
-
 
     # Clean and vectorize test data
     X_test_cleaned = clean_corpus(X_test)
