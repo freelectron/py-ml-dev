@@ -176,9 +176,9 @@ def main(name="simple_text_classification") -> None:
         start_time = datetime.now()
         param_dist = {
             "max_depth": [3],
-            "min_child_weight": [4],
+            "min_child_weight": [5, 7],
             "n_estimators": [75],
-            "gamma": [2, 4],
+            "gamma": [4, 6, 8],
         }
         xgb_search = train_xgboost_with_search(X_train_tfidf, y_train, param_dist)
         print("Training XGBoost with RandomizedSearchCV took", (datetime.now() - start_time).seconds, "seconds")
