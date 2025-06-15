@@ -1,20 +1,22 @@
 import os
-import pickle
 from datetime import datetime
 from typing import List, Any, Tuple, Dict
 
-import pandas as pd
 import spacy
 import ray
-from matplotlib.pyplot import title
+from py_ml_dev.utils.utils import load_pickle, save_pickle
+from sklearn.base import BaseEstimator
 from sklearn.model_selection import train_test_split, RandomizedSearchCV
+from sklearn.preprocessing import StandardScaler
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
-from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
-from sklearn.decomposition import PCA
+from sklearn.pipeline import make_pipeline
+from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay, f1_score
+from sklearn.decomposition import PCA, SparsePCA
 from sklearn.datasets import fetch_20newsgroups
 from sklearn.linear_model import LogisticRegressionCV
 from xgboost import XGBClassifier
 import matplotlib.pyplot as plt
+
 
 nlp = spacy.load("en_core_web_sm")
 
@@ -48,18 +50,6 @@ def clean_corpus(corpus: List[str], use_ray: bool = False) -> List[List[str]]:
         return [clean_text(text) for text in corpus]
 
 
-def save_pickle(obj: Any, path: str) -> None:
-    """Save an object to a pickle file."""
-    with open(path, "wb") as f:
-        pickle.dump(obj, f)
-
-
-def load_pickle(path: str) -> Any:
-    """Load an object from a pickle file."""
-    with open(path, "rb") as f:
-        return pickle.load(f)
-
-
 def vectorize_corpus(
         cleaned_corpus: List[List[str]], vocabulary: set = None
 ) -> Tuple[CountVectorizer, Any]:
@@ -74,28 +64,24 @@ def vectorize_corpus(
     return vectorizer, counts
 
 
-def tfidf_transform(counts: Any) -> Any:
+def tfidf_transform_(counts: Any) -> Any:
     """Transform count vectors to TF-IDF features."""
     return TfidfTransformer().fit_transform(counts)
 
 
-def train_logistic_regression(X, y) -> LogisticRegressionCV:
+def logistic_regression_cv() -> LogisticRegressionCV:
     """Train LogisticRegressionCV on the data."""
-    clf = LogisticRegressionCV()
-    clf.fit(X, y)
-    return clf
+    return LogisticRegressionCV()
 
 
-def train_xgboost_with_search(
-        X, y, param_dist: Dict[str, List[Any]], n_iter: int = 10
+def xgboost_random_search(
+        param_dist: Dict[str, List[Any]], n_iter: int = 10
 ) -> RandomizedSearchCV:
     """
     Train XGBoost with RandomizedSearchCV.
     """
     xgb = XGBClassifier()
-    search = RandomizedSearchCV(xgb, param_dist, n_iter=n_iter, n_jobs=-1)
-    search.fit(X, y)
-    return search
+    return RandomizedSearchCV(xgb, param_dist, n_iter=n_iter, n_jobs=-1)
 
 
 def evaluate_model(
@@ -104,16 +90,26 @@ def evaluate_model(
     """Evaluate a model and print accuracy."""
     preds = model.predict(X)
     acc = accuracy_score(y, preds)
-    print(f"Accuracy for {label or model.__class__.__name__}: {acc:.4f}")
+    f1_s = f1_score(y, preds, average = "weighted")
+
+    # Confusion matrix
     cm = confusion_matrix(y, preds)
     displ = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=model.classes_)
     fig, ax = plt.subplots(1,1, figsize=(12, 12))
     ax.set_title(f"Accuracy for {label or model.__class__.__name__}: {acc:.4f}")
+    ax.text(0.5, 1.02, f"The weighted f1 score is {f1_s}", transform=ax.transAxes, ha="center", fontsize=12)
     displ.plot(ax=ax)
     plt.show()
 
     return acc
 
+def train_cv(estimator: BaseEstimator, X: Any, y: Any) -> BaseEstimator:
+    start_time = datetime.now()
+    trained_estimator = estimator.fit(X, y)
+    print(f"Training {estimator.__class__} took", (datetime.now() - start_time).seconds, "seconds")
+    evaluate_model(trained_estimator, X, y, "LogisticRegressionCV (train)")
+
+    return trained_estimator
 
 def main() -> None:
     # Load dataset
@@ -121,7 +117,6 @@ def main() -> None:
     X_train, X_test, y_train, y_test = train_test_split(
         newsgroups.data, newsgroups.target, test_size=0.2, random_state=42
     )
-
     # Clean training data (with caching)
     path_X_train_cleaned = "../../static/data/X_train_cleaned.npy"
     if os.path.exists(path_X_train_cleaned):
@@ -137,42 +132,35 @@ def main() -> None:
     # Vectorization
     vocabulary = set(token for doc in X_train_cleaned for token in doc)
     vectorizer, X_train_counts = vectorize_corpus(X_train_cleaned, vocabulary)
-    X_train_tfidf = tfidf_transform(X_train_counts)
 
-    # Dimensionality reduction with PCA
-    n_components = 1000
-    pca_estimator = PCA(n_components=n_components).fit(X_train_tfidf.toarray())
-    X_train_tfidf = pca_estimator.transform(X_train_tfidf.toarray())
-    print(f"Reduced training data to {n_components} dimensions using PCA. "
-          f"Explained variance ratio: {pca_estimator.explained_variance_ratio_.sum():.4f}")
+    # Preprocessing & model training
+    n_components_pca = 10000
+    pipeline_preprocess = make_pipeline(
+        TfidfTransformer(),
+        PCA(n_components=n_components_pca),
+    )
+    X_train_preprocessed = pipeline_preprocess.fit_transform(X_train_counts)
 
-    # Train Logistic Regression
-    start_time = datetime.now()
-    clf_logistic = train_logistic_regression(X_train_tfidf, y_train)
-    print("Training Logistic Regression with CV took", (datetime.now() - start_time).seconds, "seconds")
-    evaluate_model(clf_logistic, X_train_tfidf, y_train, "LogisticRegressionCV (train)")
-
-    # Train XGBoost with RandomizedSearchCV
-    start_time = datetime.now()
-    param_dist = {
-        "max_depth": [5],
-        "min_child_weight": [2],
+    xgb_param_dict = {
+        "max_depth": [3],
+        "min_child_weight": [4],
         "n_estimators": [50, 100],
     }
-    xgb_search = train_xgboost_with_search(X_train_tfidf, y_train, param_dist)
-    print("Training XGBoost with RandomizedSearchCV took", (datetime.now() - start_time).seconds, "seconds")
-    pd.DataFrame(xgb_search.cv_results_).to_csv("../../static/data/xgb_search_results.csv", index=False)
-    evaluate_model(xgb_search.best_estimator_, X_train_tfidf, y_train, "XGBoostSearch (train)")
+    log_reg = logistic_regression_cv()
+    log_reg_best = train_cv(log_reg, X_train_preprocessed.toarray(), y_train)
+    xg_boost_rand_search = xgboost_random_search(xgb_param_dict)
+    xg_boost_cv_result = train_cv(xg_boost_rand_search, X_train_preprocessed.toarray(), y_train)
+    # FixMe: interfaces do not match
+    xg_boost_best = xg_boost_cv_result.best_estimator_
 
-    # Clean and vectorize test data
+    # Preprocess test data
     X_test_cleaned = clean_corpus(X_test, use_ray=True)
     X_test_counts = vectorizer.transform([" ".join(tokens) for tokens in X_test_cleaned])
-    X_test_tfidf = tfidf_transform(X_test_counts)
-    X_test_tfidf = pca_estimator.transform(X_test_tfidf.toarray())
+    X_test_preprocessed = pipeline_preprocess.fit_transform(X_test_counts)
 
     # Evaluate on test set
-    evaluate_model(clf_logistic, X_test_tfidf, y_test, "LogisticRegressionCV (test)")
-    evaluate_model(xgb_search.best_estimator_, X_test_tfidf, y_test, "XGBClassifier (test)")
+    evaluate_model(log_reg_best, X_test_preprocessed.toarray(), y_test, "LogisticRegressionCV (test)")
+    evaluate_model(xg_boost_best, X_test_preprocessed.toarray(), y_test, "XGBClassifier (test)")
 
 
 if __name__ == "__main__":
