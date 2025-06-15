@@ -3,6 +3,10 @@ static/
 
 .idea/
 
+*mlruns•/
+/py_ml_dev/nlp/mlruns/
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
