@@ -1,5 +1,6 @@
 import os
 import pickle
+import subprocess
 from datetime import datetime
 from typing import List, Any, Tuple, Dict
 
@@ -15,9 +16,6 @@ from sklearn.datasets import fetch_20newsgroups
 from sklearn.linear_model import LogisticRegressionCV
 from xgboost import XGBClassifier
 import matplotlib.pyplot as plt
-
-nlp = spacy.load("en_core_web_sm")
-mlflow.autolog()
 
 
 def clean_text(text: str) -> List[str]:
@@ -147,49 +145,53 @@ def main(name="simple_text_classification") -> None:
         save_pickle(X_train_cleaned, path_X_train_cleaned)
         print(f"Saved cleaned training data to {path_X_train_cleaned}")
 
-    with mlflow.start_run(run_name=name, log_system_metrics=True):
-        # Vectorization
-        vocabulary = set(token for doc in X_train_cleaned for token in doc)
-        vectorizer, X_train_counts = vectorize_corpus(X_train_cleaned, vocabulary)
-        X_train_tfidf = tfidf_transform(X_train_counts)
+    # Preprocessing train
+    vocabulary = set(token for doc in X_train_cleaned for token in doc)
+    vectorizer, X_train_counts = vectorize_corpus(X_train_cleaned, vocabulary)
+    X_train_tfidf = tfidf_transform(X_train_counts)
+    n_components = 7000
+    pca_estimator = PCA(n_components=n_components).fit(X_train_tfidf.toarray())
+    X_train_tfidf = pca_estimator.transform(X_train_tfidf.toarray())
+    print(f"Reduced training data to {n_components} dimensions using PCA. "
+          f"Explained variance ratio: {pca_estimator.explained_variance_ratio_.sum():.4f}")
 
-        # Dimensionality reduction with PCA
-        n_components = 5000 ; mlflow.log_param("n_components", n_components)
-        pca_estimator = PCA(n_components=n_components).fit(X_train_tfidf.toarray())
-        X_train_tfidf = pca_estimator.transform(X_train_tfidf.toarray())
-        print(f"Reduced training data to {n_components} dimensions using PCA. "
-              f"Explained variance ratio: {pca_estimator.explained_variance_ratio_.sum():.4f}")
+    # Preprocess test data
+    X_test_cleaned = clean_corpus(X_test, use_ray=True)
+    X_test_counts = vectorizer.transform([" ".join(tokens) for tokens in X_test_cleaned])
+    X_test_tfidf = tfidf_transform(X_test_counts)
+    X_test_tfidf = pca_estimator.transform(X_test_tfidf.toarray())
 
+    with mlflow.start_run(run_name=name+"-log-reg", log_system_metrics=True):
         # Train Logistic Regression
+        mlflow.log_param("n_components", n_components)
         start_time = datetime.now()
         clf_logistic = train_logistic_regression(X_train_tfidf, y_train)
         print("Training Logistic Regression with CV took", (datetime.now() - start_time).seconds, "seconds")
         evaluate_model(clf_logistic, X_train_tfidf, y_train, "LogisticRegressionCV (train)")
+        evaluate_model(clf_logistic, X_test_tfidf, y_test, "LogisticRegressionCV (test)")
 
+    with mlflow.start_run(run_name=name+"-xgboost", log_system_metrics=True):
+        mlflow.log_param("n_components", n_components)
         # Train XGBoost with RandomizedSearchCV
         start_time = datetime.now()
         param_dist = {
             "max_depth": [3],
-            "min_child_weight": [2],
-            "n_estimators": [50, 100],
+            "min_child_weight": [4],
+            "n_estimators": [75],
+            "gamma": [2, 4],
         }
         xgb_search = train_xgboost_with_search(X_train_tfidf, y_train, param_dist)
         print("Training XGBoost with RandomizedSearchCV took", (datetime.now() - start_time).seconds, "seconds")
         evaluate_model(xgb_search.best_estimator_, X_train_tfidf, y_train, "XGBoostSearch (train)")
-
-        # Clean and vectorize test data
-        X_test_cleaned = clean_corpus(X_test, use_ray=True)
-        X_test_counts = vectorizer.transform([" ".join(tokens) for tokens in X_test_cleaned])
-        X_test_tfidf = tfidf_transform(X_test_counts)
-        X_test_tfidf = pca_estimator.transform(X_test_tfidf.toarray())
-
-        # Evaluate on test set
-        evaluate_model(clf_logistic, X_test_tfidf, y_test, "LogisticRegressionCV (test)")
         evaluate_model(xgb_search.best_estimator_, X_test_tfidf, y_test, "XGBClassifier (test)")
 
 
 if __name__ == "__main__":
-    # Retrieve the git commit hash current.
-    import subprocess
+    nlp = spacy.load("en_core_web_sm")
+
+    mlflow.autolog()
+    mlflow.set_experiment("sklearn_simple_text_classification")
     git_commit_hash = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
-    main(name="simple_text_classification"+f"-{git_commit_hash[:7]}")
+    name=f"{git_commit_hash[:7]}"
+
+    main(name=name)
