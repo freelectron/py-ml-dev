@@ -60,7 +60,7 @@ class BasicLearner:
         for epoch in range(epochs):
             train_loss = self.train_epoch()
             test_loss, metric = self.test_epoch()
-            logger.info(f"Epoch {epoch} train loss = {train_loss} | test loss = {test_loss} ")
+            logger.info(f"Epoch {epoch} train loss = {train_loss} | test loss = {test_loss} ; metric = {metric} ")
 
     def train_epoch(self):
         losses = list()
@@ -125,6 +125,6 @@ def mse(preds, targets):
 
 n_factors = 5
 
-model = Perceptron(len(le_user.classes_), n_factors,  len(le_movie.classes_), n_factors, (0,5))
+model = Perceptron(len(le_user.classes_), n_factors,  len(le_movie.classes_), n_factors, (0, 5.5))
 learn = BasicLearner(train_dataloader, test_dataloader, model=model, loss_func=mse, opt_func=SGD, lr=0.05, metric=mse)
 learn.fit(10)
