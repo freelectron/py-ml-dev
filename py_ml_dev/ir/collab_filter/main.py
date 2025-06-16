@@ -1,5 +1,5 @@
 import logging
-import os
+import subprocess
 
 import matplotlib.pyplot as plt
 import mlflow
@@ -7,6 +7,7 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
+import torchinfo
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from torch.optim import SGD
@@ -21,8 +22,6 @@ handler = logging.StreamHandler()
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI"))
-mlflow.set_experiment("ir.collab_filtering")
 
 class MovieLens100K(Dataset):
     def __init__(self, X: np.ndarray, y: np.ndarray):
@@ -149,7 +148,6 @@ class Perceptron(nn.Module):
             self.activation(res) * (self.y_range[1] - self.y_range[0]) + self.y_range[0]
         )
 
-
 def plot_loss(losses: list, stage_labels: list):
     fig, ax = plt.subplots(1, 1)
     for loss_list, label in zip(losses, stage_labels):
@@ -160,6 +158,9 @@ def plot_loss(losses: list, stage_labels: list):
 
 
 if __name__ == "__main__":
+    git_commit_hash = (
+        subprocess.check_output(["git", "rev-parse", "HEAD"]).decode("utf-8").strip()
+    )
     ratings = pd.read_csv(
         "../../../static/data/movielens/ml-100k/u.data",
         delimiter="\t",
@@ -201,20 +202,34 @@ if __name__ == "__main__":
     train_dataloader = DataLoader(MovieLens100K(X_train, y_train), batch_size=64)
     test_dataloader = DataLoader(MovieLens100K(X_test, y_test), batch_size=64)
 
-    with mlflow.start_run(name=):
+    # mlflow.set_tracking_uri("file:/"+os.environ.get("MLFLOW_TRACKING_URI"))
+    mlflow.pytorch.autolog()
+    mlflow.set_experiment("ir.collab_filtering")
+
+    with mlflow.start_run(run_name=git_commit_hash[0:7]+"-collab-filtering"):
+        n_epochs = 2 ; mlflow.log_param("n_epochs", n_epochs)
         n_factors = 5
+        lr = 0.05
         mse = torch.nn.MSELoss()
         model = Perceptron(
             len(le_user.classes_), n_factors, len(le_movie.classes_), n_factors, (0, 5.5)
         )
+        model_sum_file = "../../../static/data/model_summary.txt"
+        with open(model_sum_file, "w") as f:
+            f.write(str(torchinfo.summary(model, verbose=0)))
+        mlflow.log_artifact(model_sum_file)
+
+        learning_params = dict(
+            loss_func = mse,
+            opt_func = SGD,
+            lr = lr,
+            metric = mse
+        ) ; mlflow.log_params(learning_params)
         learn = BasicLearner(
             train_dataloader,
             test_dataloader,
             model=model,
-            loss_func=mse,
-            opt_func=SGD,
-            lr=0.05,
-            metric=mse,
+            **learning_params
         )
-        train_losses, test_losses, eval_metrics = learn.fit(2)
+        train_losses, test_losses, eval_metrics = learn.fit(n_epochs)
         plot_loss([train_losses, test_losses], ["train", "test"])
