@@ -211,6 +211,7 @@ class Solution:
 
         return False
 
+    # https://leetcode.com/problems/count-and-say/submissions/1778040877/?envType=problem-list-v2&envId=string
     class Solution:
         def rle_encode(self, s: str):
             res = ""
@@ -233,6 +234,92 @@ class Solution:
             s = self.rle_encode(s)
 
         return s
+
+# https://leetcode.com/problems/edit-distance/?envType=problem-list-v2&envId=string
+class Solution:
+    def minDistance(self, word1: str, word2: str) -> int:
+        m = len(word1)
+        n = len(word2)
+
+        dp = [[None]*(n+1) for _ in range(m+1)]
+        for i in range(m+1):
+            for j in range(n+1):
+                if i == 0:
+                    dp[i][j] = j
+                if j == 0:
+                    dp[i][j] = i
+        for i in range(1, m+1):
+            for j in range(1, n+1):
+                if word1[i-1] == word2[j-1]:
+                    dp[i][j] = dp[i-1][j-1]
+                else:
+                    dp[i][j] = 1 + min(dp[i-1][j-1],dp[i-1][j],dp[i][j-1])
+
+        return dp[m][n]
+
+class Solution:
+    def minDistance(self, word1: str, word2: str) -> int:
+        m = len(word1)
+        n = len(word2)
+
+        dp = [[j if i ==0 else i for j in range(n+1)] for i in range(m+1)]
+        for i in range(1, m+1):
+            for j in range(1, n+1):
+                if word1[i-1] == word2[j-1]:
+                    dp[i][j] = dp[i-1][j-1]
+                else:
+                    dp[i][j] = 1 + min(dp[i-1][j-1],dp[i-1][j],dp[i][j-1])
+
+        return dp[m][n]
+
+class Solution:
+    def minDistance(self, word1: str, word2: str) -> int:
+        m = len(word1)
+        n = len(word2)
+
+        if n > m:
+            word1, word2 = word2, word1
+            m, n = n, m
+
+        prev_row = list(range(n+1))
+        curr_row = [0] * (n+1)
+
+        for i in range(1, m+1):
+            curr_row[0] = i
+            for j in range(1, n+1):
+                if word1[i-1] == word2[j-1]:
+                    curr_row[j] = prev_row[j-1]
+                else:
+                    curr_row[j] = 1 + min(prev_row[j-1],prev_row[j],curr_row[j-1])
+            prev_row, curr_row = curr_row, prev_row
+
+        return prev_row[n]
+
+# https://leetcode.com/problems/substring-with-concatenation-of-all-words/?envType=problem-list-v2&envId=string
+class Solution:
+    def check_sequence(self, sub, words, stride):
+        for i in range(0, len(sub), stride):
+            flag = False
+            for i_w, word in enumerate(words):
+                if word == sub[i:i+stride]:
+                    popped = words.pop(i_w)
+                    flag = True
+                    break
+            if not flag:
+                return False
+
+        return len(words)==0
+
+    def findSubstring(self, s: str, words: List[str]) -> List[int]:
+        w_length = len(words[0])
+        s_length = len(words) * w_length
+        res = list()
+        for i in range(0, len(s)):
+            is_concatination = self.check_sequence(s[i:i+s_length], words[:], w_length)
+            if is_concatination:
+                res.append(i)
+
+        return res
 
 
 
