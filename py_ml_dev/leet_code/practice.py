@@ -321,6 +321,131 @@ class Solution:
 
         return res
 
+# https://leetcode.com/problems/pascals-triangle/?envType=problem-list-v2&envId=dynamic-programming
+class Solution:
+    def generate(self, numRows: int) -> List[List[int]]:
+        res = [[1]]
+        prev = [1]
+        for i in range(1, numRows):
+            prev = [0] + prev + [0]
+            curr = []
+            for j in range(0, i+1):
+                curr.append(prev[j] + prev[j+1])
+            res.append(curr)
+            prev = curr
+        return res
+
+
+# https://leetcode.com/problems/climbing-stairs/?envType=problem-list-v2&envId=dynamic-programming
+def climb(curr, n):
+    if curr == n:
+        return 1
+    if curr > n:
+        return 0
+
+    return climb(curr+1, n) + climb(curr+2, n)
+
+class Solution:
+    def climbStairs(self, n: int) -> int:
+        return climb(0, n)
+
+class Solution:
+    def climbStairs(self, n: int) -> int:
+        steps = [1, 2]
+        for i in range(2, n):
+            steps.append(steps[-1] + steps[-2])
+
+        return steps[n-1]
+
+# https://leetcode.com/problems/maximum-subarray/?envType=problem-list-v2&envId=dynamic-programming
+class Solution:
+    def maxSubArray(self, nums: List[int]) -> int:
+        sub_max = nums[0]
+        neg_buff = 0
+        for _, e in enumerate(nums[1:]):
+            print("e=", e)
+            print("sub_max=", sub_max)
+            print("neg_buff=", neg_buff)
+            if e >= 0 and sub_max < 0:
+                sub_max = e
+                neg_buff = 0
+            elif e >= 0 and sub_max > 0:
+                if (sub_max + neg_buff) + e > sub_max:
+                    sub_max += neg_buff + e
+                    neg_buff = 0
+                elif e+neg_buff > 0:
+                # need to create pos_buff => SOLUTION FAILS
+                else:
+                    sub_max = e
+                    neg_buff = 0
+            elif e < 0 and sub_max < 0:
+                if e > sub_max:
+                    sub_max = e
+                    neg_buff = 0
+                    # TODO: check this case
+                else:
+                    pass
+            elif e < 0 and sub_max >= 0:
+                neg_buff += e
+            else:
+                print("something went wrong")
+
+            print("sub_max=", sub_max)
+            print("neg_buff=", neg_buff)
+            print()
+        return sub_max
+
+class Solution:
+    def maxSubArray(self, nums: List[int]) -> int:
+        m = list()
+        for i_s in range(len(nums)):
+            curr = [nums[i_s]]
+            for j_e in range(i_s+1, len(nums)):
+                curr.append(curr[j_e - i_s -1] + nums[j_e])
+            m.append(max(curr))
+
+        return max(m)
+
+class Solution:
+    def maxSubArray(self, nums: List[int]) -> int:
+        m = nums[0]
+        for i_s in range(len(nums)):
+            v = nums[i_s]
+            curr = [v]
+            if v > m:
+                m = v
+            for j_e in range(i_s+1, len(nums)):
+                v = curr[j_e - i_s - 1] + nums[j_e]
+                curr.append(v)
+                if v > m:
+                    m = v
+
+        return m
+
+# https://leetcode.com/problems/jump-game/?envType=problem-list-v2&envId=dynamic-programming
+class Solution:
+    def canJump(self, nums: List[int]) -> bool:
+        i = 0
+        n = len(nums)
+        prev = "1" * n
+        for i, e in enumerate(nums[:-1]):
+            curr = ["0"] * n
+            for j in range(e+1):
+                curr[i+j] = "1"
+            curr = "".join(curr)
+            # logical and with prev
+            u = bin(int(prev, 2) & int(curr, 2))
+            print(u)
+            # u > 0
+            if "1" in u:
+                # logical or to carry forward
+                prev = bin(int(prev, 2) | int(curr, 2))
+            else:
+                return False
+
+        curr = "".join(["0"] * (n-1) +["1"])
+        return "1" in bin(int(prev, 2) & int(curr, 2))
+
 
 
 
