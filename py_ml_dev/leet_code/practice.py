@@ -446,6 +446,99 @@ class Solution:
         curr = "".join(["0"] * (n-1) +["1"])
         return "1" in bin(int(prev, 2) & int(curr, 2))
 
+class Solution:
+    def canJump(self, nums: List[int]) -> bool:
+        max_reachable_i = 0
+        for i, e in enumerate(nums):
+            if i > max_reachable_i:
+                return False
+            max_reachable_i = max(max_reachable_i, i + e)
+
+        return True
 
 
+# https://leetcode.com/problems/best-time-to-buy-and-sell-stock/?envType=problem-list-v2&envId=dynamic-programming
+class Solution:
+    def maxProfit(self, prices: List[int]) -> int:
+        if len(prices) == 1:
+            return 0
+        profit = prices[1] - prices[0] if prices[1] > prices[0] else 0
+        minimum1 = prices[0]
+        maximum1 = prices[1]
+        for e in prices[1:]:
+            if e < minimum1:
+                minimum1 = e
+                maximum1 = 0
+            else:
+                maximum1 = max(e, maximum1)
+                profit1 = maximum1 - minimum1
+                profit = max(profit1, profit)
 
+        return profit
+
+class Solution:
+    def maxProfit(self, prices: List[int]) -> int:
+        profit = 0
+        minimum1 = 10e6
+        for e in prices:
+            minimum1 = min(minimum1, e)
+            profit = max(profit,e-minimum1)
+
+        return profit
+
+# https://leetcode.com/problems/best-time-to-buy-and-sell-stock-ii/?envType=problem-list-v2&envId=dynamic-programming
+class Solution:
+    def maxProfit(self, prices: List[int]) -> int:
+        minimum = prices[0]+1
+        maximum = 0
+        profit = 0
+        for i in range(len(prices)):
+            print("i=",i)
+
+            if prices[i] < minimum:
+                print("here")
+                minimum = prices[i]
+                diff = maximum - minimum
+                profit += diff if diff > 0 else 0
+                maximum = 0
+            else:
+                if prices[i] > maximum:
+                    print("there")
+                    maximum = prices[i]
+                    diff = maximum - minimum
+                    profit += diff if diff > 0 else 0
+                    minimum = prices[i]
+                else:
+                    print("there")
+                    diff = maximum - minimum
+                    profit += diff if diff > 0 else 0
+                    minimum = prices[i]
+                    maximum = 0
+
+            print("maximum=",maximum)
+            print("minimum=",minimum)
+            print("profit=",profit)
+            print()
+        # if maximum > minimum:
+        #     profit += maximum - minimum
+        return profit
+
+# https://leetcode.com/problems/unique-binary-search-trees/?envType=problem-list-v2&envId=dynamic-programming
+    # class Solution:
+#     def numTrees(self, n: int) -> int:
+#         if n <= 1: return 1
+#         return sum( [ self.numTrees(i-1) * self.numTrees(n-i) for i in range(1, n+1) ] )
+class Solution:
+    def numTrees(self, n: int) -> int:
+        dp = [0]*(n+1)
+        dp[0], dp[1] = 1, 1
+        for i in range(2, n+1):
+            for j in range(1, i+1):
+                dp[i] += dp[j-1] * dp[i-j]
+        return dp[n]
+
+class Solution:
+    @cache
+    def numTrees(self, n: int) -> int:
+        if n <= 1: return 1
+        return sum(self.numTrees(i-1) * self.numTrees(n-i) for i in range(1, n+1))
