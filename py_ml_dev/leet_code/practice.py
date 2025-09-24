@@ -1,4 +1,5 @@
 #  EASY
+from functools import cache
 from typing import Optional, List
 
 
@@ -374,7 +375,8 @@ class Solution:
                     sub_max += neg_buff + e
                     neg_buff = 0
                 elif e+neg_buff > 0:
-                # need to create pos_buff => SOLUTION FAILS
+                    # need to create pos_buff => SOLUTION FAILS
+                    pass
                 else:
                     sub_max = e
                     neg_buff = 0
