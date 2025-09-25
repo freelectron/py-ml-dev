@@ -544,3 +544,96 @@ class Solution:
     def numTrees(self, n: int) -> int:
         if n <= 1: return 1
         return sum(self.numTrees(i-1) * self.numTrees(n-i) for i in range(1, n+1))
+
+
+# Definition for a binary tree node.
+class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+# https://leetcode.com/problems/binary-tree-level-order-traversal/?envType=problem-list-v2&envId=breadth-first-search
+class Solution:
+    def levelOrder(self, root: Optional[TreeNode]) -> List[List[int]]:
+        if not root:
+            return []
+
+        res = []
+        stack = [[root]]
+
+        while stack:
+            nodes = stack.pop()
+            if not nodes:
+                break
+
+            level_vals = []
+            next_level_nodes = []
+            for node in nodes:
+                level_vals.append(node.val)
+
+                if node.left and node.right:
+                    next_level_nodes.append(node.left)
+                    next_level_nodes.append(node.right)
+                elif node.left and not node.right:
+                    next_level_nodes.append(node.left)
+                elif not node.left and node.right:
+                    next_level_nodes.append(node.right)
+                else:
+                    pass
+
+            res.append(level_vals)
+            stack.append(next_level_nodes)
+
+        return res
+
+
+from collections import deque
+
+# Definition for a binary tree node.
+class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+class Solution:
+    def levelOrder(self, root: Optional[TreeNode]) -> List[List[int]]:
+        if not root:
+            return []
+
+        res = []
+        dq = deque()
+        dq.append(root)
+
+        while dq:
+            level_vals = list()
+            current_dq_length = len(dq)
+
+            for _ in range(current_dq_length):
+                node = dq.popleft()
+
+                if not node:
+                    print("error")
+                    break
+
+                level_vals.append(node.val)
+
+                if node.left and node.right:
+                    dq.append(node.left)
+                    dq.append(node.right)
+                elif node.left and not node.right:
+                    dq.append(node.left)
+                elif not node.left and node.right:
+                    dq.append(node.right)
+                else:
+                    pass
+
+            res.append(level_vals)
+
+        return res
+
+
+
+
+
