@@ -634,6 +634,60 @@ class Solution:
         return res
 
 
+# https://leetcode.com/problems/recover-binary-search-tree/?envType=problem-list-v2&envId=depth-first-search
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
 
+class Solution:
+    def recoverTree(self, root: Optional[TreeNode]) -> None:
+        """
+        Do not return anything, modify root in-place instead.
+        """
+
+        stack = [root]
+
+        while stack:
+            node = stack.pop()
+
+            if node.left:
+                stack.append(node.left)
+            if node.right:
+                stack.append(node.right)
+
+            if node.left:
+                substack_left = [node.left]
+            else:
+                substack_left = []
+            while substack_left:
+                sub_node = substack_left.pop()
+                if sub_node.val > node.val:
+                    temp = node.val
+                    node.val = sub_node.val
+                    sub_node.val = temp
+
+                if sub_node.left:
+                    substack_left.append(sub_node.left)
+                if sub_node.right:
+                    substack_left.append(sub_node.right)
+
+            substack_right = [node.right] if node.right else []
+
+            while substack_right:
+                sub_node = substack_right.pop()
+                if sub_node.val < node.val:
+                    temp = node.val
+                    node.val = sub_node.val
+                    sub_node.val = temp
+
+                if sub_node.left:
+                    substack_right.append(sub_node.left)
+                if sub_node.right:
+                    substack_right.append(sub_node.right)
+
+        return root
 
 
