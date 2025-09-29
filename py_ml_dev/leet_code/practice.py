@@ -668,7 +668,7 @@ class Solution:
                     temp = node.val
                     node.val = sub_node.val
                     sub_node.val = temp
-
+                    stack.append(node)
                 if sub_node.left:
                     substack_left.append(sub_node.left)
                 if sub_node.right:
@@ -682,7 +682,7 @@ class Solution:
                     temp = node.val
                     node.val = sub_node.val
                     sub_node.val = temp
-
+                    stack.append(node)
                 if sub_node.left:
                     substack_right.append(sub_node.left)
                 if sub_node.right:
@@ -690,4 +690,74 @@ class Solution:
 
         return root
 
+class Solution:
+    def inorder_traverse(self,node):
+        if not node:
+            return
+        self.inorder_traverse(node.left)
 
+        if self.prev:
+            if self.prev.val > node.val:
+                if not self.first:
+                    self.first = self.prev
+                self.second = node
+
+        self.prev = node
+
+        self.inorder_traverse(node.right)
+
+    def recoverTree(self, root: Optional[TreeNode]) -> None:
+        """
+        Do not return anything, modify root in-place instead.
+        """
+        self.prev = self.first = self.second = None
+        if root:
+            self.inorder_traverse(root)
+
+        self.first.val, self.second.val = self.second.val, self.first.val
+        return root
+
+# https://leetcode.com/problems/binary-tree-inorder-traversal/
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+
+class Solution:
+    def traverse(self, node):
+        if not node.left and not node.right:
+            return [node.val]
+
+        if node.left and not node.right:
+            return self.traverse(node.left)
+
+        if node.right and not node.left:
+            return self.traverse(node.right)
+
+        return self.traverse(node.left) + self.traverse(node.right)
+
+    def inorderTraversal(self, root: Optional[TreeNode]) -> List[int]:
+        if not root:
+            return []
+        else:
+            return self.traverse(root)
+
+class Solution:
+    ans = []
+
+    def traverse(self, node):
+        if not node:
+            return
+        self.traverse(node.left)
+        self.ans.append(node.val)
+        self.traverse(node.right)
+
+    def inorderTraversal(self, root: Optional[TreeNode]) -> List[int]:
+        if not root:
+            return []
+        else:
+            self.ans = []
+            self.traverse(root)
+            return self.ans
