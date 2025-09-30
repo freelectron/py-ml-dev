@@ -866,3 +866,20 @@ class Solution:
                 stack_r.append(node_r.left)
 
         return True
+
+class Solution:
+    def isSymmetric(self, root: Optional[TreeNode]) -> bool:
+        def check(node_l, node_r):
+            if not node_l and not node_r:
+                return True
+            if not node_l or not node_r:
+                return False
+            if node_l.val != node_r.val:
+                return False
+
+            return check(node_l.right, node_r.left) and check(node_l.left, node_r.right)
+
+        if not root.left and not root.right:
+            return True
+
+        return check(root.left, root.right)
