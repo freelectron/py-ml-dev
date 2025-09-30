@@ -761,3 +761,108 @@ class Solution:
             self.ans = []
             self.traverse(root)
             return self.ans
+
+
+# https://leetcode.com/problems/symmetric-tree/?envType=problem-list-v2&envId=depth-first-search
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    def dfs_l(self, node, vals):
+        if not node:
+            vals.append(None)
+            return
+        vals.append(node.val)
+        if not node.left and not node.right:
+            return
+            # if node.left and not node.right:
+        #     return self.dfs_l(node.left, vals)
+        # if not node.left and node.right:
+        #     return self.dfs_l(node.right, vals)
+        # if node.left and node.right:
+        return self.dfs_l(node.left, vals), self.dfs_l(node.right,vals)
+
+    def dfs_r(self, node, vals):
+        if not node:
+            return
+        vals.append(node.val)
+        if not node.left and not node.right:
+            pass
+        if node.right and not node.left:
+            return self.dfs_r(node.right, vals)
+        if not node.right and node.left:
+            return self.dfs_r(node.left, vals)
+        if node.right and node.left:
+            return self.dfs_r(node.right, vals), self.dfs_r(node.left,vals)
+
+    def isSymmetric(self, root: Optional[TreeNode]) -> bool:
+        vals_l = []
+        vals_r = []
+        res_l = self.dfs_l(root.left, vals_l)
+        res_r = self.dfs_r(root.right, vals_r)
+
+        print(res_l, vals_l)
+        print(res_l, vals_r)
+    # Definition for a binary tree node.
+
+class Solution:
+    def dfs_l(self, node, vals):
+        if not node:
+            vals.append(None)
+            return
+        vals.append(node.val)
+        if not node.left and not node.right:
+            return
+        return self.dfs_l(node.left, vals), self.dfs_l(node.right,vals)
+
+    def dfs_r(self, node, vals):
+        if not node:
+            vals.append(None)
+            return
+        vals.append(node.val)
+        if not node.left and not node.right:
+            return
+        return self.dfs_r(node.right, vals), self.dfs_r(node.left,vals)
+
+    def isSymmetric(self, root: Optional[TreeNode]) -> bool:
+        vals_l = []
+        vals_r = []
+        res_l = self.dfs_l(root.left, vals_l)
+        res_r = self.dfs_r(root.right, vals_r)
+
+        return vals_l==vals_r
+
+class Solution:
+    def isSymmetric(self, root: Optional[TreeNode]) -> bool:
+        if not root.left and not root.right:
+            return True
+
+        stack_l = [root.left]
+        stack_r = [root.right]
+
+        while stack_l and stack_r:
+
+            node_l = stack_l.pop()
+            node_r = stack_r.pop()
+
+            val_l = node_l.val if node_l else None
+            val_r = node_r.val if node_r else None
+
+            if val_r != val_l:
+                return False
+            elif val_r == val_l == None:
+                continue
+            else:
+                if not node_l.left and not node_l.right:
+                    continue
+
+                stack_l.append(node_l.left)
+                stack_l.append(node_l.right)
+
+                stack_r.append(node_r.right)
+                stack_r.append(node_r.left)
+
+        return True
