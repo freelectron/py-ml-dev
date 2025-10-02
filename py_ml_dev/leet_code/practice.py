@@ -883,3 +883,122 @@ class Solution:
             return True
 
         return check(root.left, root.right)
+
+
+# leetcode.com/problems/balanced-binary-tree/?envType=problem-list-v2&envId=depth-first-search
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    def isBalanced(self, root: Optional[TreeNode]) -> bool:
+        def dfs(node, leaf_depths, depth):
+            if not node:
+                return
+            if node.left is None and node.right is None:
+                leafs.append((node.val, depth))
+
+            dfs(node.left, leafs, depth+1)
+            dfs(node.right, leafs, depth+1)
+
+        leafs = []
+        res = dfs(root, leafs, 0)
+
+        print(leafs)
+
+        return res
+
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    prev_max_leaf_depth = 0
+
+    def isBalanced(self, root: Optional[TreeNode]) -> bool:
+
+
+        def dfs(node, depth):
+            if node.left is None and node.right is None:
+                if abs(self.prev_max_leaf_depth - depth) > 1:
+                    if not self.prev_max_leaf_depth:
+                        self.prev_max_leaf_depth = depth
+
+                        return True
+
+                    return False
+
+                self.prev_max_leaf_depth = max(self.prev_max_leaf_depth, depth)
+
+                return True
+
+            if node.left and not node.right:
+                return dfs(node.left, depth+1)
+
+            if not node.left and node.right:
+                return dfs(node.right, depth+1)
+
+            return dfs(node.left, depth+1) and dfs(node.right, depth+1)
+
+
+        self.prev_max_leaf_depth = 0
+
+        if not root:
+            return True
+
+        res = dfs(root, 0)
+
+        return res
+
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    prev_max_leaf_depth = None
+    prev_min_leaf_depth = None
+
+    def isBalanced(self, root: Optional[TreeNode]) -> bool:
+
+        def check_balance(depth):
+            prev_max = 0 if self.prev_max_leaf_depth is None else self.prev_max_leaf_depth
+
+            if abs(prev_max - depth) > 1:
+                if self.prev_max_leaf_depth is None:
+                    self.prev_max_leaf_depth = depth
+
+                    return True
+
+                return False
+
+            self.prev_max_leaf_depth = max(prev_max, depth)
+
+            return True
+
+        def dfs(node, depth):
+            if not node:
+                self.prev_max_leaf_depth = depth-1 if self.prev_max_leaf_depth is None else self.prev_max_leaf_depth
+
+                return True
+
+            if node.left is None and node.right is None:
+                return check_balance(depth)
+
+            return dfs(node.left, depth+1) and dfs(node.right, depth+1)
+
+
+        self.prev_max_leaf_depth = None
+        self.prev_min_leaf_depth = None
+
+        if not root:
+            return True
+
+        res = dfs(root, 0)
+
+        return res
