@@ -1002,3 +1002,128 @@ class Solution:
         res = dfs(root, 0)
 
         return res
+
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    prev_max_leaf_depth = 0
+    prev_min_leaf_depth = 10e6
+
+    def isBalanced(self, root: Optional[TreeNode]) -> bool:
+
+        def check_balance(depth):
+            self.prev_min_leaf_depth = min(self.prev_min_leaf_depth, depth)
+            self.prev_max_leaf_depth = max(self.prev_max_leaf_depth, depth)
+
+            if abs(self.prev_max_leaf_depth - self.prev_min_leaf_depth) > 1:
+
+                return False
+
+            return True
+
+        def dfs(node, depth):
+
+            if node.left is None and node.right is None:
+                return check_balance(depth)
+
+            if node.left and not node.right:
+                return dfs(node.left, depth+1)
+            if not node.left and node.right:
+                return dfs(node.right, depth+1)
+
+            return dfs(node.left, depth+1) and dfs(node.right, depth+1)
+
+
+        self.prev_max_leaf_depth = 0
+        self.prev_min_leaf_depth = 10e6
+
+        if not root:
+            return True
+
+        res = dfs(root, 0)
+
+        if self.prev_max_leaf_depth == self.prev_min_leaf_depth and self.prev_min_leaf_depth >1:
+            return False
+
+        return res
+
+class Solution:
+    prev_max_leaf_depth = 0
+    prev_min_leaf_depth = 10e6
+
+    def isBalanced(self, root: Optional[TreeNode]) -> bool:
+        def dfs(node, depth):
+
+            if node.left is None and node.right is None:
+                self.prev_max_leaf_depth = max(self.prev_max_leaf_depth, depth)
+                return True
+
+            if node.left and not node.right:
+                return dfs(node.left, depth+1)
+            if not node.left and node.right:
+                return dfs(node.right, depth+1)
+
+            return dfs(node.left, depth+1) and dfs(node.right, depth+1)
+
+        if not root:
+            return True
+
+        self.prev_max_leaf_depth = 0
+        stack = [root]
+        while stack:
+            node = stack.pop()
+
+            if not node.left:
+                l_prev_max = 0
+            else:
+                self.prev_max_leaf_depth = 0
+                dfs(node.left, 1)
+                l_prev_max = self.prev_max_leaf_depth
+                stack.append(node.left)
+
+            if not node.right:
+                r_prev_max = 0
+            else:
+                self.prev_max_leaf_depth = 0
+                dfs(node.right, 1)
+                print("self.prev_max_leaf_depth", self.prev_max_leaf_depth)
+                r_prev_max = self.prev_max_leaf_depth
+                stack.append(node.right)
+
+            if abs(l_prev_max-r_prev_max)>1:
+                return False
+
+
+        return True
+
+class Solution:
+    def isBalanced(self, root: Optional[TreeNode]) -> bool:
+        def check_height(node):
+
+            if not node:
+                return 0
+
+            l = check_height(node.left)
+            if l == -1:
+                return -1
+
+            r = check_height(node.right)
+            if r == -1:
+                return -1
+
+            if abs(r - l) > 1:
+                return -1
+
+            return 1 + max(l, r)
+
+
+        if not root:
+            return True
+
+        res = check_height(root)
+
+        return res != -1
