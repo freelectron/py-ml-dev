@@ -1127,3 +1127,56 @@ class Solution:
         res = check_height(root)
 
         return res != -1
+
+
+# https://leetcode.com/problems/minimum-depth-of-binary-tree/?envType=problem-list-v2&envId=depth-first-search
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+class Solution:
+    depth_min = 10e5+1
+    def minDepth(self, root: Optional[TreeNode]) -> int:
+        def dfs(node, depth):
+            if not node.right and not node.left:
+                self.depth_min = min(depth, self.depth_min)
+                return
+
+            if node.left:
+                dfs(node.left, depth+1)
+
+            if node.right:
+                dfs(node.right, depth+1)
+
+        self.depth_min = 10e5+1
+        if root:
+            dfs(root, 1)
+        else:
+            return 0
+
+        return self.depth_min
+
+from collections import deque
+class Solution:
+    def minDepth(self, root: Optional[TreeNode]) -> int:
+
+        if not root:
+            return 0
+
+        dq = deque([(root,1)])
+
+        while dq:
+            node,depth = dq.popleft()
+
+            if node.right:
+                dq.append((node.right, depth+1))
+
+            if node.left:
+                dq.append((node.left, depth+1))
+
+            if not node.right and not node.left:
+                return depth
+
+
