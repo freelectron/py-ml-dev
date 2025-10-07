@@ -1204,3 +1204,20 @@ class Solution:
 
         return self.ans
 
+
+# https://leetcode.com/problems/pascals-triangle-ii/?envType=problem-list-v2&envId=dynamic-programming
+class Solution:
+    def getRow(self, rowIndex: int) -> List[int]:
+
+        res = [ [1], [1,1] ]
+
+        if rowIndex >= 2:
+            for i in range(2, rowIndex+1):
+                prev = res[i-1]
+                interim = [prev[j] + prev[j+1] for j in range(0, len(prev)-1)]
+                row = [1] + interim + [1]
+                res.append(row)
+
+
+        return res[rowIndex]
+
