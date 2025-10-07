@@ -1179,4 +1179,28 @@ class Solution:
             if not node.right and not node.left:
                 return depth
 
+# https://leetcode.com/problems/generate-parentheses/?envType=problem-list-v2&envId=dynamic-programming
+class Solution:
+    n = None
+    ans = []
+
+    def generateParenthesis(self, n: int) -> List[str]:
+        def build(s: int, d: int, pattern: str):
+            if s > 0 and (self.n - d) > s:
+                build(s+1, d+1, pattern+"(")
+                build(s-1, d+1, pattern+")")
+            elif s > 0 and (self.n - d) < s:
+                build(s-1, d+1, pattern+")")
+            elif s == 0 and (self.n - d) > 0:
+                build(s+1, d+1, pattern+"(")
+            else:
+                pattern = pattern + ")"*(self.n - d)
+                self.ans.append(pattern)
+
+        self.ans = []
+        self.n = n * 2
+
+        build(1, 1, "(")
+
+        return self.ans
 
