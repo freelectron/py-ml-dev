@@ -1221,3 +1221,101 @@ class Solution:
 
         return res[rowIndex]
 
+# https://leetcode.com/problems/minimum-path-sum/?envType=problem-list-v2&envId=dynamic-programming
+class Solution:
+    def minPathSum(self, grid: List[List[int]]) -> int:
+        n = len(grid)
+        m = len(grid[0])
+
+        # print("n", n)
+        # print("m", m)
+
+        def valid_candidate(i, j):
+            if i < n and j<m and i>=0 and j>=0:
+                return True
+            else:
+                return False
+
+        def traverse(i,j, s):
+            val = grid[i][j]
+            s += val
+
+            # print(val)
+
+            if i == n-1 and j == m-1:
+                return s
+
+            i_c_1 = i + 1
+            j_c_1 = j
+            i_c_2 = i
+            j_c_2 = j + 1
+            # print("i_c_1", i_c_1)
+            # print("j_c_1", j_c_1)
+            # print("i_c_2", i_c_2)
+            # print("j_c_2", j_c_2)
+            c_1 = valid_candidate(i_c_1, j_c_1)
+            c_2 = valid_candidate(i_c_2, j_c_2)
+            # print("c_1", c_1)
+            # print("c_2", c_2)
+
+            if c_1 and c_2:
+                return min(traverse(i_c_1, j_c_1, s), traverse(i_c_2, j_c_2, s))
+
+            if c_1:
+                return traverse(i_c_1, j_c_1, s)
+            if c_2:
+                return traverse(i_c_2, j_c_2, s)
+
+        return traverse(0,0,0)
+
+class Solution:
+    def minPathSum(self, grid: List[List[int]]) -> int:
+        n = len(grid)
+        m = len(grid[0])
+
+        mem = [ [ None for _ in range(m) ] for _ in range(n) ]
+
+        def valid_candidate(i, j):
+            if i < n and j<m and i>=0 and j>=0:
+                return True
+            else:
+                return False
+
+        def traverse(i,j):
+            val = grid[i][j]
+            if i == n-1 and j == m-1:
+                return val
+
+            s_mem = mem[i][j]
+            if s_mem:
+                return s_mem
+
+            i_c_1 = i + 1
+            j_c_1 = j
+            i_c_2 = i
+            j_c_2 = j + 1
+            c_1 = valid_candidate(i_c_1, j_c_1)
+            c_2 = valid_candidate(i_c_2, j_c_2)
+
+            c_s_1 = traverse(i_c_1, j_c_1) if c_1 else float('inf')
+            c_s_2 = traverse(i_c_2, j_c_2) if c_2 else float('inf')
+
+            mem[i][j] = val + min(c_s_1, c_s_2)
+
+            return mem[i][j]
+
+        traverse(0,0)
+
+        if n == 1 and m == 1:
+            return grid[0][0]
+
+        return mem[0][0]
+
+
+
+
+
+
+
+
+
