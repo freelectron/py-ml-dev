@@ -1312,8 +1312,75 @@ class Solution:
         return mem[0][0]
 
 
+# https://leetcode.com/problems/unique-paths/?envType=problem-list-v2&envId=dynamic-programming
+class Solution:
+    def uniquePaths(self, m: int, n: int) -> int:
+        c = m
+        m = n
+        n = c
+        def valid_move(i,j):
+            return i < n and j < m
 
+        def traverse(i,j):
+            if i == n - 1 and j == m - 1:
+                return 1
+            d = 0
+            if valid_move(i+1, j):
+                d = traverse(i+1,j)
+            r = 0
+            if valid_move(i, j+1):
+                r = traverse(i, j+1)
+            return r + d
+        s = traverse(0,0)
 
+        return s
+
+class Solution:
+    def uniquePaths(self, m: int, n: int) -> int:
+        c = m
+        m = n
+        n = c
+        mem = [ [None for _ in range(m)] for _ in range(n) ]
+
+        def valid_move(i,j):
+            return i < n and j < m
+
+        def traverse(i,j):
+            if mem[i][j]:
+                return mem[i][j]
+            if i == n - 1 and j == m - 1:
+                return 1
+            flag_d = valid_move(i+1, j)
+            d = 0
+            if flag_d:
+                d = traverse(i+1,j)
+            flag_r = valid_move(i, j+1)
+            r = 0
+            if flag_r:
+                r = traverse(i, j+1)
+            mem[i][j] = r + d
+
+            return mem[i][j]
+
+        if n ==1 and m == 1:
+            return 1
+
+        traverse(0,0)
+
+        return mem[0][0]
+
+class Solution:
+    def uniquePaths(self, m: int, n: int) -> int:
+        prev_row = curr_row = [1 for _ in range(n)]
+
+        for i in range(1,m):
+            curr_row = [1]
+            for j in range(1, n):
+                curr_row.append(curr_row[j-1] + prev_row[j])
+
+            prev_row = curr_row
+
+        return curr_row[-1]
 
 
 
