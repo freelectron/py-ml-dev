@@ -1383,6 +1383,46 @@ class Solution:
         return curr_row[-1]
 
 
+# https://leetcode.com/problems/palindrome-partitioning/submissions/1798388250/?envType=problem-list-v2&envId=dynamic-programming
+from copy import copy
+
+class Solution:
+    def partition(self, s: str) -> List[List[str]]:
+        res = []
+        n = len(s)
+
+        def build(sub:str,i:int):
+            if sub == sub[::-1]:
+                res.append(sub)
+
+            print("sub", sub, "i", i)
+            if i + 1 < n:
+                sub += s[i+1]
+                build(copy(sub), i+1)
+                build(copy(sub[1:]), i+1)
+
+        build(copy(s[0]),0)
+
+        return res
+
+from copy import copy
+
+class Solution:
+    def partition(self, s: str) -> List[List[str]]:
+        res = []
+        def find_palindroms(start: list, sub:str):
+            if start == len(s):
+                res.append(sub[:])
+                return
+            for i in range(start+1, len(s)+1):
+                candidate = s[start:i]
+                if candidate == candidate[::-1]:
+                    find_palindroms(i, sub + [candidate])
+
+        find_palindroms(0, [])
+
+        return res
+
 
 
 
