@@ -1424,5 +1424,52 @@ class Solution:
         return res
 
 
+# https://leetcode.com/problems/count-number-of-teams/?envType=problem-list-v2&envId=binary-indexed-tree
+class Solution:
+
+    def numTeams(self, rating: List[int]) -> int:
+        res = []
+        counter = 0
+
+        for i in range(len(rating) - 2):
+            c_upper = []
+            c_lower = []
+            arr_slice = rating[i+1:]
+            first = rating[i]
+            for j in range(len(arr_slice)):
+                last = arr_slice[j]
+                if last > first:
+                    if c_upper:
+                        c_upper_copy = c_upper[:]
+                        for o, c in enumerate(c_upper):
+                            if last > c:
+                                # res.append([first, c, last])
+                                counter += 1
+                                c_upper_copy.insert(o, last)
+                            else:
+                                c_upper_copy.insert(o, last)
+                                break
+                        c_upper = c_upper_copy
+                    else:
+                        c_upper.append(last)
+                else:
+                    if c_lower:
+                        c_lower_copy = c_lower[:]
+                        for o,c in enumerate(c_lower):
+                            if last < c:
+                                # res.append([first, c, last])
+                                counter += 1
+                                c_lower_copy.insert(o, last)
+                            else:
+                                c_lower_copy.insert(o, last)
+                                break
+                        c_lower = c_lower_copy
+                    else:
+                        c_lower.append(last)
+
+        print(res)
+        return counter
+
+
 
 
