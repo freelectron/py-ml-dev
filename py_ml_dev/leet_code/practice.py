@@ -1524,5 +1524,35 @@ class Solution:
         return bfs(root, 1)
 
 
+# https://leetcode.com/problems/path-sum/?envType=problem-list-v2&envId=breadth-first-search
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
 
+from collections import deque
+
+class Solution:
+    def hasPathSum(self, root: Optional[TreeNode], targetSum: int) -> bool:
+        if not root:
+            return False
+
+        dq = deque()
+        dq.append((root, 0))
+
+        while dq:
+            node, s = dq.popleft()
+            s += node.val
+
+            if not node.left and not node.right:
+                if s == targetSum:
+                    return True
+            if node.left:
+                dq.append((node.left, s))
+            if node.right:
+                dq.append((node.right, s))
+
+        return False
 
