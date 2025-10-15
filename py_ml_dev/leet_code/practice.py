@@ -1556,3 +1556,34 @@ class Solution:
 
         return False
 
+# https://leetcode.com/problems/sum-of-left-leaves/?envType=problem-list-v2&envId=breadth-first-search
+# Definition for a binary tree node.
+# class TreeNode:
+#     def __init__(self, val=0, left=None, right=None):
+#         self.val = val
+#         self.left = left
+#         self.right = right
+from collections import deque
+
+class Solution:
+    def sumOfLeftLeaves(self, root: Optional[TreeNode]) -> int:
+        res = 0
+        dq = deque()
+        dq.append((root, False))
+
+        while dq:
+            node, left = dq.popleft()
+
+            if not node.left and not node.right:
+                if left:
+                    res += node.val
+
+            if node.left:
+                dq.append((node.left, True))
+
+            if node.right:
+                dq.append((node.right, False))
+
+        return res
+
+
