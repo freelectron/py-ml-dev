@@ -1587,3 +1587,22 @@ class Solution:
         return res
 
 
+# https://leetcode.com/problems/counting-bits/?envType=problem-list-v2&envId=dynamic-programming
+class Solution:
+    def countBits(self, n: int) -> List[int]:
+        mem = [0, 1]
+        s = ["0", "1"]
+        p = 0
+        if n==0:
+            return [0]
+        for i in range(2, n+1):
+            bd = bin(i)
+            c = 0
+            for e in bd[2:]:
+                if e == "1":
+                    c += 1
+            mem.append(c)
+
+        return mem
+
+
