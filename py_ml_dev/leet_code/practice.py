@@ -1605,4 +1605,15 @@ class Solution:
 
         return mem
 
+# https://leetcode.com/problems/min-cost-climbing-stairs/?envType=problem-list-v2&envId=dynamic-programming
+class Solution:
+    def minCostClimbingStairs(self, cost: List[int]) -> int:
+        acc = 0
+        n = len(cost)
+        acc = [cost[0], cost[1]]
+        for i in range(2, n):
+            c = min(acc[i-1], acc[i-2]) + cost[i]
+            acc.append(c)
+
+        return min(acc[-1], acc[-2])
 
