@@ -1617,3 +1617,19 @@ class Solution:
 
         return min(acc[-1], acc[-2])
 
+# https://leetcode.com/problems/triangle/?envType=problem-list-v2&envId=dynamic-programming
+class Solution:
+    def minimumTotal(self, triangle: List[List[int]]) -> int:
+        previous_sum = triangle[0]
+        for current_row in triangle[1:]:
+            m = len(current_row)
+            first = current_row[0] + previous_sum[0]
+            last = current_row[-1] + previous_sum[-1]
+            current_sum = [0] * m
+            current_sum[0] = first
+            current_sum[-1] = last
+            for j in range(1, m-1) :
+                current_sum[j] = current_row[j] + min(previous_sum[j], previous_sum[j-1])
+            previous_sum = current_sum
+
+        return min(previous_sum)
