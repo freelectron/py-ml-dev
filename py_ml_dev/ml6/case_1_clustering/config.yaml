@@ -1,0 +1,12 @@
+data:
+  input_path: ./static/data/data_sensors.csv
+  output_path: ./static/data/predictions.csv
+  label_column: Label
+  focus_sensors:
+    - "Sensor 2"
+    - "Sensor 9"
+    - "Sensor 13"
+
+model:
+  svc_gamma: 0.7
+  svc_random_state: 42
