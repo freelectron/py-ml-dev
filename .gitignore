@@ -204,3 +204,10 @@ cython_debug/
 
 
 /py_ml_dev/ir/match_clothing_items/datasets
+
+*.csv
+*.mp4
+
+*.DS_Store*
+*.pt
+*prev_solutions*
